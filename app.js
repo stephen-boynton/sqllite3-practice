@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const mustacheExpress = require("mustache-express");
 const fs = require("fs");
-const { updateCaseId, createCase } = require("./dal");
+const { getCaseId, createCase, createFile } = require("./dal");
 app.engine("mustache", mustacheExpress());
 app.set("view engine", "mustache");
 app.set("views", __dirname + "/views");
@@ -23,13 +23,26 @@ app.use(
 //your routes
 
 app.get("/", (req, res) => {
-	updateCaseId();
 	res.render("index");
 });
 
-app.post("/case", (req, res) => {
-	createCase(req.body);
-	res.redirect("/");
+app.post("/case", async (req, res) => {
+	const oldId = await getCaseId();
+	createCase(req.body, oldId);
+	res.redirect("/file");
+});
+
+app.get("/file", (req, res) => {
+	res.render("file");
+});
+
+app.post("/file", async (req, res) => {
+	const oldId = await getFileId();
+	const caseId = await getCaseId();
+	let newId = oldId + 1;
+	if (!oldId) newId = 1;
+	createFile(req.body, newId, caseId);
+	res.render("file");
 });
 
 app.set("port", 3000);
