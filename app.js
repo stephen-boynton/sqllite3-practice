@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const mustacheExpress = require("mustache-express");
 const fs = require("fs");
-const { getCaseId, createCase, createFile } = require("./dal");
+const { updateCaseId, updateFileId, createCase, createFile } = require("./dal");
 app.engine("mustache", mustacheExpress());
 app.set("view engine", "mustache");
 app.set("views", __dirname + "/views");
@@ -27,8 +27,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/case", async (req, res) => {
-	const oldId = await getCaseId();
-	createCase(req.body, oldId);
+	const caseId = await updateCaseId();
+	createCase(req.body, caseId);
 	res.redirect("/file");
 });
 
@@ -37,12 +37,15 @@ app.get("/file", (req, res) => {
 });
 
 app.post("/file", async (req, res) => {
-	const oldId = await getFileId();
-	const caseId = await getCaseId();
-	let newId = oldId + 1;
-	if (!oldId) newId = 1;
-	createFile(req.body, newId, caseId);
-	res.render("file");
+	// let newId = await updateFileId();
+	let newId = 1;
+	let caseId = 4;
+	if (newId === NaN || !newId) newId = 1;
+	await createFile(req.body, newId, caseId);
+	fileId = await getFileId(req.body.fileName);
+	caseId = await getCaseId(req.body.fileName);
+	createTags(req.body.tags, fileId, caseId);
+	res.redirect("file");
 });
 
 app.set("port", 3000);
