@@ -1,0 +1,21 @@
+{
+	"name": "sqlite-practice",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {
+		"dev": "nodemon app.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"body-parser": "^1.18.1",
+		"express": "^4.15.4",
+		"express-session": "^1.15.5",
+		"moment": "^2.18.1",
+		"mustache-express": "^1.2.5",
+		"nodemon": "^1.12.1",
+		"sqlite3": "^3.1.11"
+	}
+}
