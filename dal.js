@@ -12,24 +12,57 @@ const db = new sqlite3.Database(
 	}
 );
 
+function getAllCaseInfo() {
+	return new Promise((resolve, reject) => {
+		const sql = `SELECT * FROM Cases`;
+		db.all(sql, [], (err, row) => {
+			if (err) console.log(err);
+			resolve(row);
+		});
+	});
+}
+
+function getAllFileInfo(caseId) {
+	return new Promise((resolve, reject) => {
+		const sql = `SELECT * FROM Files WHERE case_id = ${caseId}`;
+		db.all(sql, [], (err, row) => {
+			if (err) console.log(err);
+			resolve(row);
+		});
+	});
+}
+
 function getCaseId(fileName) {
 	return new Promise((resolve, reject) => {
 		const sql = `SELECT case_id FROM Files WHERE file_name = ${fileName} `;
 		db.get(sql, [], (err, row) => {
 			if (err) console.log(err);
-			console.log(row.case_id);
 			resolve(row.case_id);
 		});
 	});
 }
 
-function getFileId(fileName) {
+function getLastFileId() {
 	return new Promise((resolve, reject) => {
-		const sql = `SELECT file_id FROM Files WHERE file_name = ${fileName} `;
+		const sql = `SELECT file_id FROM Files ORDER BY file_id DESC LIMIT 1 `;
 		db.get(sql, [], (err, row) => {
 			if (err) console.log(err);
-			console.log(row.case_id);
-			resolve(row.case_id);
+			resolve(row.file_id);
+		});
+	});
+}
+
+function getLastTagId() {
+	return new Promise((resolve, reject) => {
+		const sql = `SELECT tag_id FROM Tags ORDER BY tag_id DESC LIMIT 1 `;
+		db.get(sql, [], (err, row) => {
+			if (err) console.log(err);
+			console.log(row);
+			if (row === undefined) {
+				resolve(1);
+			} else {
+				resolve(row.tag_id);
+			}
 		});
 	});
 }
@@ -39,7 +72,6 @@ function updateCaseId() {
 		const sql = `SELECT case_id FROM Cases ORDER BY case_id DESC LIMIT 1 `;
 		db.get(sql, [], (err, row) => {
 			if (err) console.log(err);
-			console.log(row.case_id);
 			resolve(row.case_id + 1);
 		});
 	});
@@ -50,7 +82,6 @@ function updateFileId() {
 		const sql = `SELECT file_id FROM Files ORDER BY file_id DESC LIMIT 1 `;
 		db.get(sql, [], (err, row) => {
 			if (err) console.log(err);
-			console.log(row.file_id);
 			resolve(row.file_id + 1);
 		});
 	});
@@ -85,14 +116,35 @@ function createFile(fileStuff, fileId, caseId) {
 	});
 }
 
-function createTags(tags, fileId, caseId) {
+// function createTags(tags, tagId, fileId, caseId) {
+// 	const now = moment().format("YYYY-MM-DD HH:mm:ss");
+// 	const tagArray = tags.split(", ");
+// 	console.log("This is tagArray " + tagArray);
+// 	let tagSQL = `INSERT INTO Tags(tag_id, file_id, case_id, tag, date_modified) VALUES`;
+// 	tagArray.forEach(tag => {
+// 		tagSQL += ` (${tagId}, ${fileId}, ${caseId}, '${tag}', '${now}'),`;
+// 	});
+// 	tagSQL += ";";
+// 	tagSQL = tagSQL.slice(tagSQL.length - 2, 1);
+// 	console.log(tagSQL);
+// 	db.run(tagSQL, [], err => {
+// 		if (err) console.log(err);
+// 		console.log(`Rows inserted ${this.changes}`);
+// 	});
+// }
+
+function createTags(tags, tagId, fileId, caseId) {
 	const now = moment().format("YYYY-MM-DD HH:mm:ss");
 	const tagArray = tags.split(", ");
-	tagArray.forEach(tag => {
-		const tagSQL = `INSERT INTO Tags(tag_id, file_id, case_id, tag, date_modified) VALUES(${tagId}, ${fileId}, ${caseId}), ${tag}, ${now}`;
-		db.run(tagSQL, err => {
-			if (err) console.log(err);
-			console.log(`Rows inserted ${this.changes}`);
+	db.serialize(() => {
+		// const tagSQL = db.prepare(
+		// 	`INSERT INTO Tags(tag_id, file_id, case_id, tag, date_modified) VALUES `
+		// );
+		tagArray.forEach(tag => {
+			const tagging = `INSERT INTO Tags(tag_id, file_id, case_id, tag, date_modified) VALUES (${tagId}, ${fileId}, ${caseId}, '${tag}', '${now}');`;
+			console.log(tagging);
+			db.run(tagging);
+			tagId += 1;
 		});
 	});
 }
@@ -107,10 +159,14 @@ function createTags(tags, fileId, caseId) {
 // });
 
 module.exports = {
+	getAllCaseInfo,
+	getAllFileInfo,
 	getCaseId,
-	getFileId,
+	getLastFileId,
+	getLastTagId,
 	updateCaseId,
 	updateFileId,
 	createCase,
-	createFile
+	createFile,
+	createTags
 };

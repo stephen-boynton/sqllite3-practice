@@ -2,15 +2,15 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>SQLite3 Practice</title>
+    <title></title>
   </head>
   <body>
-    <h1>SQLite3 Practice</h1>
-    <h2>Create New Case</h2>
-    <form class="new-case" action="/case" method="POST">
-      <input type="text" name="caseName" value="">
-      <input type="text" name="caseDescription" value="">
-      <button type="submit" name="button">Create</button>
-    </form>
+    <h1>What case would you like to work on?</h1>
+    <ul>
+      {{#cases}}
+  <a href="/{{case_id}}" name="{{case_id}}" value="{{case_name}}"><li>{{case_name}}</li></a>
+      {{/cases}}
+    </ul>
+    <a href="/new-case">Add new case</a>
   </body>
 </html>
